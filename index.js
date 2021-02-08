@@ -28,6 +28,7 @@ app.get('/', (req, res) => {
 app.get('/products/:item', async (req, res) => {
 
   let retry = 0
+  availa
 
   try {
     const searchTerm = req.params.item
@@ -42,7 +43,7 @@ app.get('/products/:item', async (req, res) => {
           products: JSON.parse(products)
         })
 
-      // products are not in cahce, get from legacy api
+        // products are not in cahce, get from legacy api
       } else {
         const products = await axios.get(`https://bad-api-assignment.reaktor.com/v2/products/${searchTerm}`)
 
@@ -86,6 +87,18 @@ app.get('/products/:item', async (req, res) => {
 
 // get availability
 
+const getAvailability = async (manufacturer) => {
+  const availability = await axios.get(`https://bad-api-assignment.reaktor.com/v2/availability/${searchTermManu}`)
+  let availabilityArray = []
+  availability.data.response.forEach(element => {
+    const instock = element.DATAPAYLOAD
+    availabilityArray.push({id: element.id, instock: instock})
+  })
+  console.log(availabilityArray)
+
+  return availabilityArray
+}
+
 app.get('/availability/:manufacturer', async (req, res) => {
 
   // let retry = 0
@@ -104,22 +117,30 @@ app.get('/availability/:manufacturer', async (req, res) => {
         const availability = await axios.get(`https://bad-api-assignment.reaktor.com/v2/availability/${searchTermManu}`)
 
         // try again if data is empty -> send error if after 3 tries data is still empty
-        // while (products.data.length === 0) {
-        //   if (retry <= 3) {
-        //     retry++
-        //     products = await axios.get(`https://bad-api-assignment.reaktor.com/v2/availability/${searchTermManu}`)
-        //   } else {
-        //     res.status(503).send('Error: could not fetch data')
-        //     break
-        //   }
-        // }
+        while (availability.data.length === 0) {
+          if (retry <= 3) {
+            retry++
+            availability = await axios.get(`https://bad-api-assignment.reaktor.com/v2/availability/${searchTermManu}`)
+          } else {
+            res.status(503).send('Error: could not fetch data')
+            break
+          }
+        }
 
         // if products were fetched succesfully, send data and success as a response
 
-        client.setex(searchTermManu, 600, JSON.stringify(availability.data.response))
+        let availabilityArray = []
+        availability.data.response.forEach(element => {
+          let temp = element.DATAPAYLOAD.split('<INSTOCKVALUE>')
+          let temp2 = temp[1].split('</INSTOCKVALUE>')
+          let instock = temp2[0]
+          availabilityArray.push({id: element.id, instock: instock})
+        })
+
+        client.setex(searchTermManu, 600, JSON.stringify(availabilityArray))
 
         res.status(200).send({
-          availabilities: availability.data.response,
+          availabilities: availabilityArray,
           message: 'cache miss'
         })
       }

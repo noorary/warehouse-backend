@@ -17,19 +17,19 @@ let facemasksArray = []
 let beaniesArray = []
 
 // --- scheduled funcs to get data from legacy api ---
-cron.schedule('* * * * *', async function () {
+cron.schedule('*/5 * * * *', async function () {
   console.log('running task to get gloves');
   const temp = await getGloves()
   glovesArray = temp
 })
 
-cron.schedule('* * * * *', async function () {
+cron.schedule('*/5 * * * *', async function () {
   console.log('running a task to get facemasks');
   const temp = await getFacemasks()
   facemasksArray = temp
 })
 
-cron.schedule('* * * * *', async function () {
+cron.schedule('*/5 * * * *', async function () {
   console.log('running a task to get beanies');
   const temp = await getBeanies()
   beaniesArray = temp
@@ -37,8 +37,6 @@ cron.schedule('* * * * *', async function () {
 
 // --- data-fetching for gloves ---
 getGloves = async () => {
-  console.log('hanskat alkaa')
-  console.log(new Date())
 
   const availability = await getAvailability()
 
@@ -71,15 +69,11 @@ getGloves = async () => {
       }
     }
   }
-  console.log('hanskat valmiina')
-  console.log(new Date())
   return gloves
 }
 
 // --- data-fetching for facemasks ---
 getFacemasks = async () => {
-  console.log('naamarit alkaa')
-  console.log(new Date())
 
   const availability = await getAvailability()
 
@@ -112,15 +106,11 @@ getFacemasks = async () => {
       }
     }
   }
-  console.log('naamarit valmiina')
-  console.log(new Date())
   return facemasks
 }
 
 // --- data-fetching for beanies ---
 getBeanies = async () => {
-  console.log('pipot alkaa')
-  console.log(new Date())
 
   const availability = await getAvailability()
 
@@ -153,16 +143,12 @@ getBeanies = async () => {
       }
     }
   }
-  console.log('pipot valmiina')
-  console.log(new Date())
   return beanies
 }
 
 
 // --- data-fetching for stock-values ---
 getAvailability = async () => {
-  let availability = []
-  console.log('saatavuus alkaa')
 
   let abiplos = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/abiplos')
   if (abiplos.data.response.length < 2) abiplos = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/abiplos')
@@ -177,15 +163,8 @@ getAvailability = async () => {
   let laion = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/laion')
   if (laion.data.response.length < 2) laion = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/laion')
 
-  Array.prototype.push.apply(availability, abiplos.data.response)
-  Array.prototype.push.apply(availability, niksleh.data.response)
-  Array.prototype.push.apply(availability, okkau.data.response)
-  Array.prototype.push.apply(availability, juuran.data.response)
-  Array.prototype.push.apply(availability, hennex.data.response)
-  Array.prototype.push.apply(availability, laion.data.response)
-
-  console.log('valmis')
-  return availability
+  const result = [...abiplos.data.response, ...niksleh.data.response, ...okkau.data.response, ...juuran.data.response, ...hennex.data.response, ...laion.data.response]
+  return result
 }
 
 app.get('/', (req, res) => {

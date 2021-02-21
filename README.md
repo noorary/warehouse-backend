@@ -8,6 +8,16 @@ More info about the task [here](https://www.reaktor.com/junior-dev-assignment/).
 
 # My solution
 
+App is deployed to [Heroku](https://nr-warehouse.herokuapp.com/)
+
+API is running also in Heroku:
+
+[gloves](https://nr-warehouse-api.herokuapp.com/products/gloves)
+
+[facemasks](https://nr-warehouse-api.herokuapp.com/products/facemasks)
+
+[beanies](https://nr-warehouse-api.herokuapp.com/products/beanies)
+
 ![ui picture](https://github.com/noorary/warehouse/blob/master/imgs/UI.png?raw=true)
 ## Project structure and reasoning behind some choices made
 

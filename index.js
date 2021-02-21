@@ -28,7 +28,6 @@ app.get('/', (req, res) => {
 app.get('/products/:item', async (req, res) => {
 
   let retry = 0
-  availa
 
   try {
     const searchTerm = req.params.item
@@ -84,85 +83,6 @@ app.get('/products/:item', async (req, res) => {
     res.status(500).send({ message: err.message })
   }
 })
-
-// get availability
-
-const getAvailability = async (manufacturer) => {
-  const availability = await axios.get(`https://bad-api-assignment.reaktor.com/v2/availability/${searchTermManu}`)
-  let availabilityArray = []
-  availability.data.response.forEach(element => {
-    const instock = element.DATAPAYLOAD
-    availabilityArray.push({id: element.id, instock: instock})
-  })
-  console.log(availabilityArray)
-
-  return availabilityArray
-}
-
-app.get('/availability/:manufacturer', async (req, res) => {
-
-  // let retry = 0
-
-  try {
-    const searchTermManu = req.params.manufacturer
-    console.log(searchTermManu)
-    client.get(searchTermManu, async (err, availability) => {
-      if (err) throw err
-
-      if (availability) {
-        res.status(200).send({
-          availabilities: JSON.parse(availability)
-        })
-      } else {
-        const availability = await axios.get(`https://bad-api-assignment.reaktor.com/v2/availability/${searchTermManu}`)
-
-        // try again if data is empty -> send error if after 3 tries data is still empty
-        while (availability.data.length === 0) {
-          if (retry <= 3) {
-            retry++
-            availability = await axios.get(`https://bad-api-assignment.reaktor.com/v2/availability/${searchTermManu}`)
-          } else {
-            res.status(503).send('Error: could not fetch data')
-            break
-          }
-        }
-
-        // if products were fetched succesfully, send data and success as a response
-
-        let availabilityArray = []
-        availability.data.response.forEach(element => {
-          let temp = element.DATAPAYLOAD.split('<INSTOCKVALUE>')
-          let temp2 = temp[1].split('</INSTOCKVALUE>')
-          let instock = temp2[0]
-          availabilityArray.push({id: element.id, instock: instock})
-        })
-
-        client.setex(searchTermManu, 600, JSON.stringify(availabilityArray))
-
-        res.status(200).send({
-          availabilities: availabilityArray,
-          message: 'cache miss'
-        })
-      }
-    })
-  } catch (err) {
-    if (err.response) {
-      // request was send succesfully, but recieved an error response
-      console.log(error.response.data)
-      console.log(error.response.status)
-      console.log(error.response.headers)
-    } else if (err.request) {
-      // response was never received or request never left
-      console.log(error.request)
-    } else {
-      // something weird happened
-      console.log('Error', error.message)
-    }
-    res.status(500).send({ message: err.message })
-  }
-})
-
-
 
 const port = 5000
 

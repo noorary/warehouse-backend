@@ -1,89 +1,228 @@
 const express = require('express')
 const axios = require('axios')
-const redis = require('redis')
 const bodyParser = require('body-parser')
 const cors = require('cors')
+const cron = require('node-cron')
 
 const app = express()
 
 app.use(cors())
-
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
-const redisPort = 6379
-const client = redis.createClient(redisPort)
+// --- placeholder arrays for products ---
 
-client.on('error', (err) => {
-  console.log(err)
+let glovesArray = []
+let facemasksArray = []
+let beaniesArray = []
+
+// --- scheduled funcs to get data from legacy api ---
+cron.schedule('* * * * *', async function () {
+  console.log('running task to get gloves');
+  const temp = await getGloves()
+  glovesArray = temp
 })
+
+cron.schedule('* * * * *', async function () {
+  console.log('running a task to get facemasks');
+  const temp = await getFacemasks()
+  facemasksArray = temp
+})
+
+cron.schedule('* * * * *', async function () {
+  console.log('running a task to get beanies');
+  const temp = await getBeanies()
+  beaniesArray = temp
+})
+
+// --- data-fetching for gloves ---
+getGloves = async () => {
+  console.log('hanskat alkaa')
+  console.log(new Date())
+
+  const availability = await getAvailability()
+
+  let response
+  response = await axios.get('https://bad-api-assignment.reaktor.com/v2/products/gloves')
+  if(response.data.length < 2) {
+    response = await axios.get('https://bad-api-assignment.reaktor.com/v2/products/gloves')
+  }
+  const gloves = response.data
+
+  for (let i = 0; i < gloves.length; i++) {
+    var id = gloves[i].id.toUpperCase()
+    const avail = availability.filter(function (obj) {
+      return obj.id === id
+    })
+
+    if (avail.length === 0) {
+      gloves[i] = {
+        ...gloves[i],
+        instock: 'not_available'
+      }
+      continue
+    } else {
+      var temp = avail[0].DATAPAYLOAD.split('<INSTOCKVALUE>')
+      var temp2 = temp[1].split('</INSTOCKVALUE>')
+      let instockValue = temp2[0]
+      gloves[i] = {
+        ...gloves[i],
+        instock: instockValue
+      }
+    }
+  }
+  console.log('hanskat valmiina')
+  console.log(new Date())
+  return gloves
+}
+
+// --- data-fetching for facemasks ---
+getFacemasks = async () => {
+  console.log('naamarit alkaa')
+  console.log(new Date())
+
+  const availability = await getAvailability()
+
+  let response
+  response = await axios.get('https://bad-api-assignment.reaktor.com/v2/products/facemasks')
+  if(response.data.length < 2) {
+    response = await axios.get('https://bad-api-assignment.reaktor.com/v2/products/facemasks')
+  }
+  const facemasks = response.data
+
+  for (let i = 0; i < facemasks.length; i++) {
+    var id = facemasks[i].id.toUpperCase()
+    const avail = availability.filter(function (obj) {
+      return obj.id === id
+    })
+
+    if (avail.length === 0) {
+      facemasks[i] = {
+        ...facemasks[i],
+        instock: 'not_available'
+      }
+      continue
+    } else {
+      var temp = avail[0].DATAPAYLOAD.split('<INSTOCKVALUE>')
+      var temp2 = temp[1].split('</INSTOCKVALUE>')
+      let instockValue = temp2[0]
+      facemasks[i] = {
+        ...facemasks[i],
+        instock: instockValue
+      }
+    }
+  }
+  console.log('naamarit valmiina')
+  console.log(new Date())
+  return facemasks
+}
+
+// --- data-fetching for beanies ---
+getBeanies = async () => {
+  console.log('pipot alkaa')
+  console.log(new Date())
+
+  const availability = await getAvailability()
+
+  let response
+  response = await axios.get('https://bad-api-assignment.reaktor.com/v2/products/beanies')
+  if(response.data.length < 2) {
+    response = await axios.get('https://bad-api-assignment.reaktor.com/v2/products/beanies')
+  }
+  const beanies = response.data
+
+  for (let i = 0; i < beanies.length; i++) {
+    var id = beanies[i].id.toUpperCase()
+    const avail = availability.filter(function (obj) {
+      return obj.id === id
+    })
+
+    if (avail.length === 0) {
+      beanies[i] = {
+        ...beanies[i],
+        instock: 'not_available'
+      }
+      continue
+    } else {
+      var temp = avail[0].DATAPAYLOAD.split('<INSTOCKVALUE>')
+      var temp2 = temp[1].split('</INSTOCKVALUE>')
+      let instockValue = temp2[0]
+      beanies[i] = {
+        ...beanies[i],
+        instock: instockValue
+      }
+    }
+  }
+  console.log('pipot valmiina')
+  console.log(new Date())
+  return beanies
+}
+
+
+// --- data-fetching for stock-values ---
+getAvailability = async () => {
+  let availability = []
+  console.log('saatavuus alkaa')
+
+  let abiplos = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/abiplos')
+  if (abiplos.data.response.length < 2) abiplos = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/abiplos')
+  let niksleh = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/niksleh')
+  if (niksleh.data.response.length < 2) niksleh = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/niksleh')
+  let okkau = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/okkau')
+  if (okkau.data.response.length < 2) okkau = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/okkau')
+  let juuran = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/juuran')
+  if (juuran.data.response.length < 2) juuran = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/juuran')
+  let hennex = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/hennex')
+  if (hennex.data.response.length < 2) hennex = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/hennex')
+  let laion = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/laion')
+  if (laion.data.response.length < 2) laion = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/laion')
+
+  Array.prototype.push.apply(availability, abiplos.data.response)
+  Array.prototype.push.apply(availability, niksleh.data.response)
+  Array.prototype.push.apply(availability, okkau.data.response)
+  Array.prototype.push.apply(availability, juuran.data.response)
+  Array.prototype.push.apply(availability, hennex.data.response)
+  Array.prototype.push.apply(availability, laion.data.response)
+
+  console.log('valmis')
+  return availability
+}
 
 app.get('/', (req, res) => {
   const response = ' Custom API for warehouse-data'
   res.send(response)
 })
 
-
-// get products 
+// --- HTTP - route ---
 app.get('/products/:item', async (req, res) => {
+  const type = req.params.item
+  console.log(type)
 
-  let retry = 0
+  let products 
 
-  try {
-    const searchTerm = req.params.item
-    console.log(searchTerm)
-
-    client.get(searchTerm, async (err, products) => {
-      if (err) throw err
-
-      // products are in cache, return from there
-      if (products) {
-        res.status(200).send({
-          products: JSON.parse(products)
-        })
-
-        // products are not in cahce, get from legacy api
-      } else {
-        const products = await axios.get(`https://bad-api-assignment.reaktor.com/v2/products/${searchTerm}`)
-
-        // try again if data is empty -> send error if after 3 tries data is still empty
-        while (products.data.length === 0) {
-          if (retry <= 3) {
-            retry++
-            products = await axios.get(`https://bad-api-assignment.reaktor.com/v2/products/${searchTerm}`)
-          } else {
-            res.status(503).send('Error: could not fetch data')
-            break
-          }
-        }
-
-        // if products were fetched succesfully, send data and success as a response
-
-        client.setex(searchTerm, 600, JSON.stringify(products.data))
-
-        res.status(200).send({
-          products: products.data,
-          message: 'cache miss'
-        })
-      }
-    })
-  } catch (err) {
-    if (err.response) {
-      // request was send succesfully, but recieved an error response
-      console.log(error.response.data)
-      console.log(error.response.status)
-      console.log(error.response.headers)
-    } else if (err.request) {
-      // response was never received or request never left
-      console.log(error.request)
-    } else {
-      // something weird happened
-      console.log('Error', error.message)
-    }
-    res.status(500).send({ message: err.message })
+  if (type === 'facemasks') {
+    // const temp = await getFacemasks()
+    // facemasksArray = temp
+    products = facemasksArray
+  } else if (type === 'gloves') {
+    // const temp = await getGloves()
+    // glovesArray = temp
+    products = glovesArray
+  } else if(type === 'beanies') {
+    // const temp = await getBeanies()
+    // beaniesArray = temp
+    products = beaniesArray
+  } else {
+    res.status(400).send('Error: item is invalid')
   }
+
+  res.status(200).json({
+    products: products
+  })
+
 })
 
+// --- ---
 const port = 5000
 
 app.listen(port, () => console.log(`Backend running on port ${port}`))

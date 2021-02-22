@@ -38,9 +38,6 @@ cron.schedule('*/5 * * * *', async function () {
 // --- data-fetching for gloves ---
 getGloves = async () => {
 
-  console.log('hanskat alkaa')
-  console.log(new Date())
-
   let response
   response = await axios.get('https://bad-api-assignment.reaktor.com/v2/products/gloves')
   if(response.data.length < 2) {
@@ -75,17 +72,11 @@ getGloves = async () => {
       }
     }
   }
-  console.log('hanskat valmiina')
-  console.log(new Date())
   return gloves
 }
 
-
-
 // --- data-fetching for facemasks ---
 getFacemasks = async () => {
-
-  const availability = await getAvailability()
 
   let response
   response = await axios.get('https://bad-api-assignment.reaktor.com/v2/products/facemasks')
@@ -93,6 +84,11 @@ getFacemasks = async () => {
     response = await axios.get('https://bad-api-assignment.reaktor.com/v2/products/facemasks')
   }
   const facemasks = response.data
+
+  const manus = [...new Set(facemasks.map(item => item.manufacturer))]
+  console.log(facemasks)
+
+  const availability = await getAvailability(manus)
 
   for (let i = 0; i < facemasks.length; i++) {
     var id = facemasks[i].id.toUpperCase()
@@ -122,14 +118,17 @@ getFacemasks = async () => {
 // --- data-fetching for beanies ---
 getBeanies = async () => {
 
-  const availability = await getAvailability()
-
   let response
   response = await axios.get('https://bad-api-assignment.reaktor.com/v2/products/beanies')
   if(response.data.length < 2) {
     response = await axios.get('https://bad-api-assignment.reaktor.com/v2/products/beanies')
   }
   const beanies = response.data
+
+  const manus = [...new Set(beanies.map(item => item.manufacturer))]
+  console.log(beanies)
+
+  const availability = await getAvailability(manus)
 
   for (let i = 0; i < beanies.length; i++) {
     var id = beanies[i].id.toUpperCase()

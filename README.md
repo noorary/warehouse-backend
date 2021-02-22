@@ -8,6 +8,18 @@ More info about the task [here](https://www.reaktor.com/junior-dev-assignment/).
 
 # My solution
 
+App is deployed to [Heroku](https://nr-warehouse.herokuapp.com/)
+
+API is running also in Heroku:
+
+[gloves](https://nr-warehouse-api.herokuapp.com/products/gloves)
+
+[facemasks](https://nr-warehouse-api.herokuapp.com/products/facemasks)
+
+[beanies](https://nr-warehouse-api.herokuapp.com/products/beanies)
+
+**! Note:** App is running on free heroku dyno, so to perform scheduled cron jobs the dyno needs to be waken up. This takes some time before data is delivered correctly. 
+
 ![ui picture](https://github.com/noorary/warehouse/blob/master/imgs/UI.png?raw=true)
 ## Project structure and reasoning behind some choices made
 

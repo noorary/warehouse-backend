@@ -38,7 +38,8 @@ cron.schedule('*/5 * * * *', async function () {
 // --- data-fetching for gloves ---
 getGloves = async () => {
 
-  const availability = await getAvailability()
+  console.log('hanskat alkaa')
+  console.log(new Date())
 
   let response
   response = await axios.get('https://bad-api-assignment.reaktor.com/v2/products/gloves')
@@ -46,6 +47,11 @@ getGloves = async () => {
     response = await axios.get('https://bad-api-assignment.reaktor.com/v2/products/gloves')
   }
   const gloves = response.data
+
+  const manus = [...new Set(gloves.map(item => item.manufacturer))]
+  console.log(manus)
+
+  const availability = await getAvailability(manus)
 
   for (let i = 0; i < gloves.length; i++) {
     var id = gloves[i].id.toUpperCase()
@@ -69,8 +75,12 @@ getGloves = async () => {
       }
     }
   }
+  console.log('hanskat valmiina')
+  console.log(new Date())
   return gloves
 }
+
+
 
 // --- data-fetching for facemasks ---
 getFacemasks = async () => {
@@ -148,22 +158,21 @@ getBeanies = async () => {
 
 
 // --- data-fetching for stock-values ---
-getAvailability = async () => {
+getAvailability = async (manus) => {
+  let result = []
 
-  let abiplos = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/abiplos')
-  if (abiplos.data.response.length < 2) abiplos = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/abiplos')
-  let niksleh = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/niksleh')
-  if (niksleh.data.response.length < 2) niksleh = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/niksleh')
-  let okkau = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/okkau')
-  if (okkau.data.response.length < 2) okkau = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/okkau')
-  let juuran = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/juuran')
-  if (juuran.data.response.length < 2) juuran = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/juuran')
-  let hennex = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/hennex')
-  if (hennex.data.response.length < 2) hennex = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/hennex')
-  let laion = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/laion')
-  if (laion.data.response.length < 2) laion = await axios.get('https://bad-api-assignment.reaktor.com/v2/availability/laion')
-
-  const result = [...abiplos.data.response, ...niksleh.data.response, ...okkau.data.response, ...juuran.data.response, ...hennex.data.response, ...laion.data.response]
+  for(let i=0; i<manus.length;i++) {
+    const type = manus[i]
+    console.log(type)
+    let prod = await axios.get(`https://bad-api-assignment.reaktor.com/v2/availability/${type}`)
+    if (prod.data.response < 2) prod = await axios.get(`https://bad-api-assignment.reaktor.com/v2/availability/${type}`)
+    if(prod.data.response === undefined) {
+      continue
+    } else {
+      result = [...result, ...prod.data.response]
+    }
+    
+  }
   return result
 }
 
